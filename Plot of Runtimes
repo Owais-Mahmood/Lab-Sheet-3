@@ -1,0 +1,76 @@
+import numpy as np
+import matplotlib.pyplot as plt
+import time
+
+# LU Factorisation
+def lu_factorisation(A):
+    """
+    Compute L and U such that A = L @ U.
+    L has 1s on the diagonal and is lower triangular.
+    U is upper triangular.
+    """
+    n, m = A.shape
+    if n != m:
+        raise ValueError("Matrix must be square")
+
+    L = np.eye(n, dtype=float)
+    U = np.zeros((n, n), dtype=float)
+
+    for row in range(n):
+        # fill row of U
+        for col in range(row, n):
+            acc = 0.0
+            for k in range(row):
+                acc += L[row, k] * U[k, col]
+            U[row, col] = A[row, col] - acc
+
+        # fill column of L
+        for col in range(row + 1, n):
+            acc = 0.0
+            for k in range(row):
+                acc += L[col, k] * U[k, row]
+            L[col, row] = (A[col, row] - acc) / U[row, row]
+
+    return L, U
+
+# Gaussian Elimination
+def gaussian_elimination(A):
+    """Perform Gaussian elimination and return upper-triangular form"""
+    A = A.astype(float).copy()
+    n = A.shape[0]
+
+    for pivot in range(n - 1):
+        for row in range(pivot + 1, n):
+            factor = A[row, pivot] / A[pivot, pivot]
+            A[row, pivot:] = A[row, pivot:] - factor * A[pivot, pivot:]
+    return A
+
+# Timing Experiment
+matrix_sizes = [20, 40, 60, 80, 100, 120, 140, 160, 180, 200]
+lu_times = []
+gauss_times = []
+
+for size in matrix_sizes:
+    mat = np.random.rand(size, size)
+
+    # LU timing
+    t0 = time.perf_counter()
+    lu_factorisation(mat)
+    lu_times.append(time.perf_counter() - t0)
+
+    # Gaussian elimination timing
+    t0 = time.perf_counter()
+    gaussian_elimination(mat)
+    gauss_times.append(time.perf_counter() - t0)
+
+# Plot Results
+plt.figure(figsize=(7,5))
+plt.plot(matrix_sizes, lu_times, 'o-', label="LU factorisation")
+plt.plot(matrix_sizes, gauss_times, 's-', label="Gaussian elimination")
+plt.xlabel("Matrix size (n)")
+plt.ylabel("Runtime (seconds)")
+plt.title("Runtime Comparison: LU vs Gaussian Elimination")
+plt.legend()
+plt.grid(True, linestyle="--", alpha=0.6)
+plt.tight_layout()
+plt.show()
